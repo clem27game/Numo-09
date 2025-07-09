@@ -426,8 +426,10 @@ void handle_enhanced_io(NumoInterpreter *interp, int io_type, int position) {
             printf(MAGENTA "Sound alert at position %d\n" RESET, position);
             break;
         case 9: // Time/Date
-            time_t now = time(NULL);
-            printf(GREEN "Current time: %s" RESET, ctime(&now));
+            {
+                time_t now = time(NULL);
+                printf(GREEN "Current time: %s" RESET, ctime(&now));
+            }
             break;
     }
 }
