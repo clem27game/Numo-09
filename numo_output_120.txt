@@ -1,8 +1,16 @@
-Numo 0-9 file operation at position 120
-Variables created: 6
-var_3_113 (int) = 13
-var_3_115 (int) = 15
+=== Numo 0-9 Advanced Output Report ===
+Position: 120
+Variables created: 5
+Stack pointer: 0
+Loop depth: 0
+
+--- Variables ---
+var_3_113 (int) = 0
+var_3_115 (int) = 4
 var_4_116 (string) = "text_116"
-math_result_117 (int) = 28
+result_117 (float) = -0.65
 var_5_118 (bool) = true
-input_119 (int) = 1
+
+--- Execution Statistics ---
+Total code length: 121
+Debug mode: disabled
