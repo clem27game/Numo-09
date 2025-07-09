@@ -68,7 +68,7 @@ pattern = "**/*.{c,h}"
 start = "ccls"
 
 [workflows]
-runButton = "Run Numo Interpreter"
+runButton = "Test Addition"
 
 [[workflows.workflow]]
 name = "Run Numo Interpreter"
@@ -81,7 +81,7 @@ args = "make"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "./main hello_world.num -d"
+args = "./main hello_world.num"
 
 [[workflows.workflow]]
 name = "Test Salut"
@@ -110,7 +110,7 @@ task = "shell.exec"
 args = "./main bonjour.num"
 
 [[workflows.workflow]]
-name = "Test Calculs"
+name = "Test Addition"
 author = 10543762
 mode = "sequential"
 
@@ -120,4 +120,4 @@ args = "make"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "./main test_calculs.num -d"
+args = "./main addition.num -d"

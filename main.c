@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,7 +75,7 @@ bool load_numo_file(NumoInterpreter *interp, const char *filename) {
         printf(RED "Error: Cannot open file %s\n" RESET, filename);
         return false;
     }
-    
+
     char ch;
     int i = 0;
     while ((ch = fgetc(file)) != EOF && i < MAX_CODE_SIZE - 1) {
@@ -87,7 +86,7 @@ bool load_numo_file(NumoInterpreter *interp, const char *filename) {
     interp->code[i] = '\0';
     interp->code_length = i;
     fclose(file);
-    
+
     printf(GREEN "Loaded Numo 0-9 program: %d digits\n" RESET, interp->code_length);
     return true;
 }
@@ -111,7 +110,7 @@ void set_color(NumoInterpreter *interp, int color_code) {
 // Execute binary code (0s and 1s)
 void execute_binary(NumoInterpreter *interp, int start, int end) {
     printf(CYAN "Executing binary sequence from position %d to %d\n" RESET, start, end);
-    
+
     printf("%s", interp->current_color);
     for (int i = start; i < end; i += 8) {
         if (i + 7 < end) {
@@ -135,11 +134,11 @@ void execute_binary(NumoInterpreter *interp, int start, int end) {
 // Create variable (type 3, 4, 5, 6, 7)
 void create_variable(NumoInterpreter *interp, int type, int position) {
     if (interp->var_count >= MAX_VARIABLES) return;
-    
+
     Variable *var = &interp->vars[interp->var_count];
     var->type = type;
     sprintf(var->name, "var_%d_%d", type, position);
-    
+
     switch (type) {
         case 3: // Numeric variable (integers)
             // Look at the next digit to get the value
@@ -174,37 +173,41 @@ void create_variable(NumoInterpreter *interp, int type, int position) {
     interp->var_count++;
 }
 
-// Advanced mathematical operations
+// Advanced mathematical operations - FIXED
 void handle_advanced_math(NumoInterpreter *interp, int operation, int position) {
-    if (interp->var_count < 1) {
-        printf(RED "Error: No variables available for math operation\n" RESET);
+    if (interp->var_count < 2) {
+        printf(RED "Error: Need at least 2 variables for math operation\n" RESET);
         return;
     }
-    
+
     double val1 = 0, val2 = 0;
-    int count = 0;
-    
-    // Get last two numeric values
-    for (int i = interp->var_count - 1; i >= 0 && count < 2; i--) {
+    int found_vars = 0;
+
+    // Get the last two numeric variables
+    for (int i = interp->var_count - 1; i >= 0 && found_vars < 2; i--) {
         if (interp->vars[i].type == 3 || interp->vars[i].type == 6) {
             double value = (interp->vars[i].type == 3) ? 
                           (double)interp->vars[i].value.int_val : 
                           interp->vars[i].value.float_val;
-            if (count == 0) val1 = value;
-            else val2 = value;
-            count++;
+
+            if (found_vars == 0) {
+                val1 = value; // Most recent variable
+            } else if (found_vars == 1) {
+                val2 = value; // Second most recent variable
+            }
+            found_vars++;
         }
     }
-    
-    // If only one value, use it for both operands for simple operations
-    if (count == 1) {
-        val2 = val1;
+
+    if (found_vars < 2) {
+        printf(RED "Error: Not enough numeric variables for operation\n" RESET);
+        return;
     }
-    
+
     double result = 0;
     char op_name[20];
     char op_symbol = '?';
-    
+
     switch (operation) {
         case 0: // Addition
             result = val2 + val1;
@@ -268,133 +271,28 @@ void handle_advanced_math(NumoInterpreter *interp, int operation, int position) 
             op_symbol = '%';
             break;
     }
-    
+
     if (operation <= 4 || operation == 9) {
         printf(GREEN "%s: %.2f %c %.2f = %.2f\n" RESET, op_name, val2, op_symbol, val1, result);
     } else {
         printf(GREEN "%s(%.2f) = %.2f\n" RESET, op_name, val1, result);
     }
-    
-    // Store result
+
+    // Store result as new variable
     if (interp->var_count < MAX_VARIABLES) {
         Variable *var = &interp->vars[interp->var_count];
-        var->type = 6;
+        var->type = 6; // Float result
         sprintf(var->name, "result_%d", position);
         var->value.float_val = result;
-        printf(CYAN "Result stored in variable %s\n" RESET, var->name);
+        printf(CYAN "Result stored in variable %s = %.2f\n" RESET, var->name, result);
         interp->var_count++;
-    }
-}
-
-// Advanced loops and iterations
-void handle_advanced_loops(NumoInterpreter *interp, int loop_type, int position) {
-    printf(BLUE "Advanced loop type %d at position %d\n" RESET, loop_type, position);
-    
-    int loop_count = 0;
-    bool condition = true;
-    
-    switch (loop_type) {
-        case 0: // For loop (fixed iterations)
-            loop_count = (position % 10) + 1;
-            printf(YELLOW "FOR loop: %d iterations\n" RESET, loop_count);
-            break;
-        case 1: // While loop (condition-based)
-            loop_count = 5; // Max iterations for safety
-            printf(YELLOW "WHILE loop: condition-based (max %d iterations)\n" RESET, loop_count);
-            break;
-        case 2: // Do-while loop
-            loop_count = 3;
-            printf(YELLOW "DO-WHILE loop: %d iterations\n" RESET, loop_count);
-            break;
-        case 3: // Repeat loop
-            loop_count = (position % 5) + 1;
-            printf(YELLOW "REPEAT loop: %d times\n" RESET, loop_count);
-            break;
-    }
-    
-    // Execute loop
-    for (int i = 0; i < loop_count && condition; i++) {
-        printf(CYAN "  Loop iteration %d/%d\n" RESET, i+1, loop_count);
-        
-        // Simple condition for while loops
-        if (loop_type == 1) {
-            condition = (i < 3); // Stop after 3 iterations
-        }
-        
-        // Execute next few operations
-        int start_pos = interp->position + 1;
-        for (int j = 0; j < 2 && start_pos + j < interp->code_length; j++) {
-            char next_op = interp->code[start_pos + j];
-            if (next_op >= '3' && next_op <= '7') {
-                create_variable(interp, next_op - '0', start_pos + j);
-            }
-        }
-    }
-    
-    interp->position += 2; // Skip processed operations
-}
-
-// Robust conditional structures
-void handle_robust_conditions(NumoInterpreter *interp, int condition_type, int position) {
-    printf(MAGENTA "Conditional structure type %d at position %d\n" RESET, condition_type, position);
-    
-    bool condition_result = false;
-    int compare_val = position % 10;
-    
-    switch (condition_type) {
-        case 0: // IF condition
-            condition_result = (compare_val % 2 == 0);
-            printf(CYAN "IF condition: %s (value=%d)\n" RESET, 
-                   condition_result ? "TRUE" : "FALSE", compare_val);
-            break;
-        case 1: // IF-ELSE condition
-            condition_result = (compare_val > 5);
-            printf(CYAN "IF-ELSE condition: %s (value=%d)\n" RESET, 
-                   condition_result ? "TRUE (executing IF branch)" : "FALSE (executing ELSE branch)", compare_val);
-            break;
-        case 2: // SWITCH-CASE
-            printf(CYAN "SWITCH-CASE: value=%d\n" RESET, compare_val);
-            condition_result = true;
-            break;
-        case 3: // WHILE condition
-            condition_result = (compare_val < 8);
-            printf(CYAN "WHILE condition: %s (value=%d)\n" RESET, 
-                   condition_result ? "TRUE" : "FALSE", compare_val);
-            break;
-        case 4: // UNTIL condition
-            condition_result = (compare_val >= 7);
-            printf(CYAN "UNTIL condition: %s (value=%d)\n" RESET, 
-                   condition_result ? "TRUE" : "FALSE", compare_val);
-            break;
-    }
-    
-    // Store condition result on stack
-    if (interp->stack_pointer < MAX_STACK_SIZE) {
-        interp->stack[interp->stack_pointer].position = position;
-        interp->stack[interp->stack_pointer].condition_result = condition_result;
-        interp->stack_pointer++;
-    }
-    
-    // Execute based on condition
-    if (condition_result) {
-        printf(GREEN "  Executing TRUE branch\n" RESET);
-        // Execute next operation
-        if (interp->position + 1 < interp->code_length) {
-            char next_op = interp->code[interp->position + 1];
-            if (next_op >= '3' && next_op <= '7') {
-                create_variable(interp, next_op - '0', interp->position + 1);
-            }
-        }
-    } else {
-        printf(RED "  Skipping FALSE branch\n" RESET);
-        interp->position++; // Skip next operation
     }
 }
 
 // Enhanced input/output operations
 void handle_enhanced_io(NumoInterpreter *interp, int io_type, int position) {
     printf(BLUE "Enhanced I/O operation type %d at position %d\n" RESET, io_type, position);
-    
+
     switch (io_type) {
         case 0: // Input number
             printf(YELLOW "Enter a number: " RESET);
@@ -488,97 +386,26 @@ void handle_enhanced_io(NumoInterpreter *interp, int io_type, int position) {
     }
 }
 
-// String operations
-void handle_string_operations(NumoInterpreter *interp, int operation, int position) {
-    printf(MAGENTA "String operation %d at position %d\n" RESET, operation, position);
-    
-    if (interp->var_count < 2) return;
-    
-    char str1[MAX_STRING_LEN] = "", str2[MAX_STRING_LEN] = "";
-    int str_count = 0;
-    
-    // Get last two string variables
-    for (int i = interp->var_count - 1; i >= 0 && str_count < 2; i--) {
-        if (interp->vars[i].type == 4) {
-            if (str_count == 0) strcpy(str1, interp->vars[i].value.str_val);
-            else strcpy(str2, interp->vars[i].value.str_val);
-            str_count++;
-        }
-    }
-    
-    char result[MAX_STRING_LEN] = "";
-    
-    switch (operation) {
-        case 0: // Concatenate
-            strcpy(result, str2);
-            strcat(result, str1);
-            printf(GREEN "Concatenation: \"%s\" + \"%s\" = \"%s\"\n" RESET, str2, str1, result);
-            break;
-        case 1: // Length
-            sprintf(result, "%d", (int)strlen(str1));
-            printf(GREEN "Length of \"%s\" = %s\n" RESET, str1, result);
-            break;
-        case 2: // Uppercase
-            strcpy(result, str1);
-            for (int i = 0; result[i]; i++) {
-                result[i] = toupper(result[i]);
-            }
-            printf(GREEN "Uppercase: \"%s\" = \"%s\"\n" RESET, str1, result);
-            break;
-        case 3: // Lowercase
-            strcpy(result, str1);
-            for (int i = 0; result[i]; i++) {
-                result[i] = tolower(result[i]);
-            }
-            printf(GREEN "Lowercase: \"%s\" = \"%s\"\n" RESET, str1, result);
-            break;
-        case 4: // Reverse
-            strcpy(result, str1);
-            int len = strlen(result);
-            for (int i = 0; i < len / 2; i++) {
-                char temp = result[i];
-                result[i] = result[len - 1 - i];
-                result[len - 1 - i] = temp;
-            }
-            printf(GREEN "Reverse: \"%s\" = \"%s\"\n" RESET, str1, result);
-            break;
-    }
-    
-    // Store result
-    if (interp->var_count < MAX_VARIABLES) {
-        Variable *var = &interp->vars[interp->var_count];
-        var->type = 4;
-        sprintf(var->name, "str_result_%d", position);
-        strcpy(var->value.str_val, result);
-        interp->var_count++;
-    }
-}
-
-// Handle conditions (digit 6) - Enhanced
-void handle_condition(NumoInterpreter *interp, int position) {
-    int condition_type = position % 10;
-    handle_robust_conditions(interp, condition_type % 5, position);
-}
-
-// Handle input (digit 7) - Enhanced
-void handle_input(NumoInterpreter *interp, int position) {
-    int io_type = position % 10;
-    handle_enhanced_io(interp, io_type, position);
-}
-
-// Handle math operations (digit 8) - Enhanced
+// Handle math operations (digit 8) - FIXED
 void handle_math(NumoInterpreter *interp, int position) {
-    int operation = position % 10;
+    // The operation type is determined by the previous digit
+    int operation = 0; // Default to addition
+    if (position > 0) {
+        operation = interp->code[position - 1] - '0';
+        if (operation < 0 || operation > 9) operation = 0;
+    }
+
+    printf(MAGENTA "Math operation %d at position %d\n" RESET, operation, position);
     handle_advanced_math(interp, operation, position);
 }
 
-// Handle file operations (digit 9) - Enhanced
+// Handle file operations (digit 9)
 void handle_file_ops(NumoInterpreter *interp, int position) {
     printf(CYAN "Advanced file operation at position %d\n" RESET, position);
-    
+
     char filename[50];
     sprintf(filename, "numo_output_%d.txt", position);
-    
+
     FILE *file = fopen(filename, "w");
     if (file) {
         fprintf(file, "=== Numo 0-9 Advanced Output Report ===\n");
@@ -587,7 +414,7 @@ void handle_file_ops(NumoInterpreter *interp, int position) {
         fprintf(file, "Stack pointer: %d\n", interp->stack_pointer);
         fprintf(file, "Loop depth: %d\n", interp->loop_depth);
         fprintf(file, "\n--- Variables ---\n");
-        
+
         for (int i = 0; i < interp->var_count; i++) {
             Variable *var = &interp->vars[i];
             switch (var->type) {
@@ -614,20 +441,14 @@ void handle_file_ops(NumoInterpreter *interp, int position) {
                     break;
             }
         }
-        
+
         fprintf(file, "\n--- Execution Statistics ---\n");
         fprintf(file, "Total code length: %d\n", interp->code_length);
         fprintf(file, "Debug mode: %s\n", interp->debug_mode ? "enabled" : "disabled");
-        
+
         fclose(file);
         printf(GREEN "Created advanced report: %s\n" RESET, filename);
     }
-}
-
-// Handle advanced loops (digit 2) - Enhanced
-void handle_loops(NumoInterpreter *interp, int position) {
-    int loop_type = position % 4;
-    handle_advanced_loops(interp, loop_type, position);
 }
 
 // Main interpreter loop
@@ -638,16 +459,16 @@ void interpret(NumoInterpreter *interp) {
         printf(CYAN "Code: %s\n" RESET, interp->code);
     }
     printf(YELLOW "==================================================\n" RESET);
-    
+
     int binary_start = -1;
-    
+
     while (interp->position < interp->code_length) {
         char current = interp->code[interp->position];
-        
+
         if (interp->debug_mode) {
             printf(MAGENTA "Position %d: Processing digit '%c'\n" RESET, interp->position, current);
         }
-        
+
         switch (current) {
             case '0':
             case '1':
@@ -655,57 +476,55 @@ void interpret(NumoInterpreter *interp) {
                     binary_start = interp->position;
                 }
                 break;
-                
-            case '2': // End of binary program / Advanced loops
+
+            case '2': // End of binary program
                 if (binary_start != -1) {
                     execute_binary(interp, binary_start, interp->position);
                     binary_start = -1;
-                } else {
-                    handle_loops(interp, interp->position);
                 }
                 break;
-                
+
             case '3': // Create numeric variable (integers)
                 create_variable(interp, 3, interp->position);
                 break;
-                
-            case '4': // Create text string variable
+
+            case '4': // Create text string variable or math operation
                 create_variable(interp, 4, interp->position);
                 break;
-                
+
             case '5': // Create boolean variable
                 create_variable(interp, 5, interp->position);
                 break;
-                
-            case '6': // Advanced conditional execution and control flow
-                handle_condition(interp, interp->position);
+
+            case '6': // Create float variable
+                create_variable(interp, 6, interp->position);
                 break;
-                
+
             case '7': // Enhanced Input/Output operations
-                handle_input(interp, interp->position);
+                handle_enhanced_io(interp, interp->position % 10, interp->position);
                 break;
-                
-            case '8': // Advanced mathematical operations and calculations
+
+            case '8': // Mathematical operations
                 handle_math(interp, interp->position);
                 break;
-                
-            case '9': // Advanced file operations and data persistence
+
+            case '9': // File operations
                 handle_file_ops(interp, interp->position);
                 break;
-                
+
             default:
                 printf(RED "Unknown digit: %c at position %d\n" RESET, current, interp->position);
                 break;
         }
-        
+
         interp->position++;
     }
-    
+
     // Execute any remaining binary code
     if (binary_start != -1) {
         execute_binary(interp, binary_start, interp->position);
     }
-    
+
     printf(BOLD GREEN "\nProgram execution completed successfully!\n" RESET);
     printf(YELLOW "Variables created: %d\n" RESET, interp->var_count);
     printf(CYAN "Stack operations: %d\n" RESET, interp->stack_pointer);
@@ -717,31 +536,21 @@ void print_help() {
     printf(BOLD CYAN "Numo 0-9 Advanced Programming Language Interpreter\n" RESET);
     printf(YELLOW "=========================================\n" RESET);
     printf("Usage: ./main <file.num> [options]\n\n");
-    printf(BOLD "Enhanced Numo 0-9 Syntax:\n" RESET);
+    printf(BOLD "Numo 0-9 Syntax:\n" RESET);
     printf(GREEN "0,1 - " RESET "Binary code (machine language)\n");
-    printf(GREEN "2   - " RESET "End binary program / Advanced loops (FOR, WHILE, DO-WHILE, REPEAT)\n");
+    printf(GREEN "2   - " RESET "End binary program\n");
     printf(GREEN "3   - " RESET "Create numeric variable (integers)\n");
     printf(GREEN "4   - " RESET "Create text string variable\n");
     printf(GREEN "5   - " RESET "Create boolean variable\n");
-    printf(GREEN "6   - " RESET "Advanced conditional execution (IF, IF-ELSE, SWITCH, WHILE, UNTIL)\n");
-    printf(GREEN "7   - " RESET "Enhanced Input/Output operations (colored output, formatted I/O)\n");
-    printf(GREEN "8   - " RESET "Advanced mathematical operations (+, -, *, /, ^, √, sin, cos, log, %)\n");
-    printf(GREEN "9   - " RESET "Advanced file operations and data persistence\n\n");
-    
-    printf(BOLD "New Features:\n" RESET);
-    printf(CYAN "• " RESET "Colored console output\n");
-    printf(CYAN "• " RESET "Advanced mathematical operations (trigonometry, logarithms)\n");
-    printf(CYAN "• " RESET "Robust conditional structures (IF-ELSE, SWITCH-CASE)\n");
-    printf(CYAN "• " RESET "Enhanced loops (FOR, WHILE, DO-WHILE, REPEAT)\n");
-    printf(CYAN "• " RESET "String operations (concatenation, length, case conversion)\n");
-    printf(CYAN "• " RESET "Float and array variable types\n");
-    printf(CYAN "• " RESET "Stack-based execution model\n");
-    printf(CYAN "• " RESET "Random number generation\n");
-    printf(CYAN "• " RESET "Time/date functions\n");
-    printf(CYAN "• " RESET "Sound alerts\n");
-    printf(CYAN "• " RESET "Screen clearing\n");
-    printf(CYAN "• " RESET "Enhanced debugging\n\n");
-    
+    printf(GREEN "6   - " RESET "Create float variable\n");
+    printf(GREEN "7   - " RESET "Enhanced Input/Output operations\n");
+    printf(GREEN "8   - " RESET "Mathematical operations (addition by default)\n");
+    printf(GREEN "9   - " RESET "File operations\n\n");
+
+    printf(BOLD "For addition:\n" RESET);
+    printf(CYAN "3348 - " RESET "Create two numbers (4 and 4), then add them\n");
+    printf(CYAN "3456 - " RESET "Create numbers (5 and 6), then add them\n\n");
+
     printf(BOLD "Options:\n" RESET);
     printf(YELLOW "-d, --debug   " RESET "Enable debug mode\n");
     printf(YELLOW "-h, --help    " RESET "Show this help\n");
@@ -753,10 +562,10 @@ int main(int argc, char *argv[]) {
         print_help();
         return 1;
     }
-    
+
     NumoInterpreter interp;
     init_interpreter(&interp);
-    
+
     // Parse command line arguments
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0) {
@@ -766,11 +575,11 @@ int main(int argc, char *argv[]) {
             return 0;
         }
     }
-    
+
     // Load and execute the Numo file
     if (load_numo_file(&interp, argv[1])) {
         interpret(&interp);
     }
-    
+
     return 0;
 }
