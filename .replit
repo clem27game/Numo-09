@@ -82,3 +82,29 @@ args = "make"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "./main hello_world.num"
+
+[[workflows.workflow]]
+name = "Test Salut"
+author = 10543762
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "make"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./main salut.num"
+
+[[workflows.workflow]]
+name = "Test Bonjour"
+author = 10543762
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "make"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./main bonjour.num"
