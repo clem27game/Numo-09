@@ -2,7 +2,7 @@ Numo 0-9 file operation at position 120
 Variables created: 6
 var_3_113 (int) = 13
 var_3_115 (int) = 15
-var_4_116 (string) = "string_116"
+var_4_116 (string) = "text_116"
 math_result_117 (int) = 28
 var_5_118 (bool) = true
-input_119 (int) = 7
+input_119 (int) = 1
