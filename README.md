@@ -6,14 +6,14 @@ Numo 0-9 est un langage de programmation révolutionnaire dont la syntaxe est un
 ## Syntaxe
 
 - **0, 1** : Code binaire (langage machine)
-- **2** : Marqueur de fin de programme binaire
-- **3** : Créer une variable entière
-- **4** : Créer une variable chaîne de caractères
+- **2** : Marqueur de fin de programme binaire / Boucles et itérations
+- **3** : Créer une variable numérique (entiers/décimaux)
+- **4** : Créer une variable de texte (chaînes de caractères)
 - **5** : Créer une variable booléenne
-- **6** : Exécution conditionnelle (if/else/while/for)
-- **7** : Entrée depuis la console
-- **8** : Opérations mathématiques
-- **9** : Opérations sur fichiers
+- **6** : Exécution conditionnelle et contrôle de flux
+- **7** : Opérations d'entrée/sortie
+- **8** : Opérations mathématiques et calculs
+- **9** : Opérations sur fichiers et persistance des données
 
 ## Utilisation
 
@@ -46,12 +46,28 @@ make
 ## Fonctionnalités
 
 - Interprétation de code binaire réel
-- Gestion de variables typées
-- Opérations conditionnelles
-- Entrées/sorties
-- Calculs mathématiques
-- Manipulation de fichiers
+- Gestion de variables typées (numériques, texte, booléennes)
+- Opérations conditionnelles et contrôle de flux
+- Boucles et itérations automatiques
+- Entrées/sorties avancées
+- Calculs mathématiques complexes
+- Manipulation de fichiers et persistance
+- Gestion de tableaux et structures de données
+- Simulation de communication réseau
 - Mode debug pour traçage d'exécution
+
+## Nouvelles Fonctionnalités
+
+### Variables Corrigées
+- **3** : Variables numériques (pour les chiffres et calculs)
+- **4** : Variables de texte (pour les chaînes de caractères)
+- **5** : Variables booléennes (vrai/faux)
+
+### Fonctionnalités Avancées
+- **Boucles automatiques** : Le chiffre 2 peut aussi créer des boucles
+- **Tableaux** : Création automatique d'arrays avec les opérations
+- **Communication** : Simulation de transmission de données
+- **Calculs complexes** : Opérations mathématiques étendues
 
 ## Philosophie
 

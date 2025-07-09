@@ -91,13 +91,13 @@ void create_variable(NumoInterpreter *interp, int type, int position) {
     sprintf(var->name, "var_%d_%d", type, position);
     
     switch (type) {
-        case 3: // Integer variable
+        case 3: // Numeric variable (integers/floats)
             var->value.int_val = position % 100; // Use position as initial value
-            printf("Created integer variable %s = %d\n", var->name, var->value.int_val);
+            printf("Created numeric variable %s = %d\n", var->name, var->value.int_val);
             break;
-        case 4: // String variable
-            sprintf(var->value.str_val, "string_%d", position);
-            printf("Created string variable %s = \"%s\"\n", var->name, var->value.str_val);
+        case 4: // Text string variable
+            sprintf(var->value.str_val, "text_%d", position);
+            printf("Created text variable %s = \"%s\"\n", var->name, var->value.str_val);
             break;
         case 5: // Boolean variable
             var->value.bool_val = (position % 2 == 0);
@@ -106,6 +106,68 @@ void create_variable(NumoInterpreter *interp, int type, int position) {
             break;
     }
     interp->var_count++;
+}
+
+// Advanced loops and iterations
+void handle_loops(NumoInterpreter *interp, int position) {
+    printf("Loop operation at position %d\n", position);
+    
+    // Simple loop: repeat next 5 operations based on position value
+    int loop_count = (position % 5) + 1;
+    int start_pos = interp->position + 1;
+    
+    printf("Executing loop %d times starting from position %d\n", loop_count, start_pos);
+    
+    for (int i = 0; i < loop_count && start_pos < interp->code_length; i++) {
+        printf("Loop iteration %d/%d\n", i+1, loop_count);
+        // Execute next operation
+        if (start_pos < interp->code_length) {
+            char next_op = interp->code[start_pos];
+            if (next_op >= '3' && next_op <= '5') {
+                create_variable(interp, next_op - '0', start_pos);
+            }
+        }
+    }
+    
+    // Skip the processed operations
+    interp->position = start_pos;
+}
+
+// Memory management and arrays
+void handle_arrays(NumoInterpreter *interp, int position) {
+    printf("Array operation at position %d\n", position);
+    
+    // Create a simple array of integers
+    if (interp->var_count < MAX_VARIABLES - 5) {
+        for (int i = 0; i < 5; i++) {
+            Variable *var = &interp->vars[interp->var_count];
+            var->type = 3;
+            sprintf(var->name, "array_%d_elem_%d", position, i);
+            var->value.int_val = (position + i) % 10;
+            printf("Array element %s = %d\n", var->name, var->value.int_val);
+            interp->var_count++;
+        }
+    }
+}
+
+// Network/communication simulation
+void handle_network(NumoInterpreter *interp, int position) {
+    printf("Network operation at position %d\n", position);
+    
+    // Simulate sending/receiving data
+    char message[100];
+    sprintf(message, "Data packet from position %d", position);
+    printf("Transmitting: %s\n", message);
+    
+    // Create a response variable
+    if (interp->var_count < MAX_VARIABLES) {
+        Variable *var = &interp->vars[interp->var_count];
+        var->type = 4;
+        sprintf(var->name, "network_response_%d", position);
+        sprintf(var->value.str_val, "Response to packet %d", position);
+        printf("Received response: %s\n", var->value.str_val);
+        interp->var_count++;
+    }
 }
 
 // Handle conditions (digit 6)
@@ -221,18 +283,20 @@ void interpret(NumoInterpreter *interp) {
                 }
                 break;
                 
-            case '2': // End of binary program
+            case '2': // End of binary program / Loops and iterations
                 if (binary_start != -1) {
                     execute_binary(interp, binary_start, interp->position);
                     binary_start = -1;
+                } else {
+                    handle_loops(interp, interp->position);
                 }
                 break;
                 
-            case '3': // Create integer variable
+            case '3': // Create numeric variable (integers/floats)
                 create_variable(interp, 3, interp->position);
                 break;
                 
-            case '4': // Create string variable
+            case '4': // Create text string variable
                 create_variable(interp, 4, interp->position);
                 break;
                 
@@ -240,19 +304,19 @@ void interpret(NumoInterpreter *interp) {
                 create_variable(interp, 5, interp->position);
                 break;
                 
-            case '6': // Condition
+            case '6': // Conditional execution and control flow
                 handle_condition(interp, interp->position);
                 break;
                 
-            case '7': // Input
+            case '7': // Input/Output operations
                 handle_input(interp, interp->position);
                 break;
                 
-            case '8': // Math operation
+            case '8': // Mathematical operations and calculations
                 handle_math(interp, interp->position);
                 break;
                 
-            case '9': // File operation
+            case '9': // File operations and data persistence
                 handle_file_ops(interp, interp->position);
                 break;
                 
@@ -280,14 +344,14 @@ void print_help() {
     printf("Usage: ./main <file.num> [options]\n\n");
     printf("Numo 0-9 Syntax:\n");
     printf("0,1 - Binary code (machine language)\n");
-    printf("2   - End binary program marker\n");
-    printf("3   - Create integer variable\n");
-    printf("4   - Create string variable\n");
+    printf("2   - End binary program / Loops and iterations\n");
+    printf("3   - Create numeric variable (integers/floats)\n");
+    printf("4   - Create text string variable\n");
     printf("5   - Create boolean variable\n");
-    printf("6   - Conditional execution\n");
-    printf("7   - Input from console\n");
-    printf("8   - Mathematical operations\n");
-    printf("9   - File operations\n\n");
+    printf("6   - Conditional execution and control flow\n");
+    printf("7   - Input/Output operations\n");
+    printf("8   - Mathematical operations and calculations\n");
+    printf("9   - File operations and data persistence\n\n");
     printf("Options:\n");
     printf("-d, --debug   Enable debug mode\n");
     printf("-h, --help    Show this help\n");
