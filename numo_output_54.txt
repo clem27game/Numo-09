@@ -1,0 +1,6 @@
+Numo 0-9 file operation at position 54
+Variables created: 4
+var_3_48 (int) = 48
+var_4_49 (string) = "string_49"
+var_5_50 (bool) = true
+math_result_53 (int) = 48
