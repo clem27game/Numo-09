@@ -1,0 +1,22 @@
+=== Numo 0-9 Advanced Output Report ===
+Position: 17
+Variables created: 11
+Stack pointer: 0
+Loop depth: 0
+
+--- Variables ---
+var_3_3 (int) = 4
+var_4_4 (string) = "text_4"
+var_5_5 (bool) = false
+var_6_6 (float) = 0.60
+result_8 (float) = 0.83
+var_3_11 (int) = 4
+var_4_12 (string) = "text_12"
+var_5_13 (bool) = false
+var_6_14 (float) = 1.40
+random_15 (int) = 16
+result_16 (float) = -0.96
+
+--- Execution Statistics ---
+Total code length: 54
+Debug mode: disabled
