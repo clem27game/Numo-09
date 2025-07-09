@@ -202,8 +202,7 @@ void handle_file_ops(NumoInterpreter *interp, int position) {
 void interpret(NumoInterpreter *interp) {
     printf("Starting Numo 0-9 interpretation...\n");
     printf("Code: %s\n", interp->code);
-    printf("=" * 50);
-    printf("\n");
+    printf("==================================================\n");
     
     int binary_start = -1;
     
