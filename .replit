@@ -77,11 +77,15 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
+args = "make clean"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
 args = "make"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "./main hello_world.num"
+args = "./main hello_world.num -d"
 
 [[workflows.workflow]]
 name = "Test Salut"

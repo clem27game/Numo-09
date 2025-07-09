@@ -123,10 +123,13 @@ void execute_binary(NumoInterpreter *interp, int start, int end) {
             }
             if (ascii_val >= 32 && ascii_val <= 126) {
                 printf("%c", ascii_val);
+            } else if (ascii_val == 0) {
+                printf(" "); // Space for null characters
             }
         }
     }
     printf(RESET "\n");
+    fflush(stdout); // Force output
 }
 
 // Create variable (type 3, 4, 5, 6, 7)
@@ -579,7 +582,10 @@ void handle_loops(NumoInterpreter *interp, int position) {
 // Main interpreter loop
 void interpret(NumoInterpreter *interp) {
     printf(BOLD GREEN "Starting Numo 0-9 Advanced Interpretation...\n" RESET);
-    printf(CYAN "Code: %s\n" RESET, interp->code);
+    printf(CYAN "Code length: %d characters\n" RESET, interp->code_length);
+    if (interp->debug_mode) {
+        printf(CYAN "Code: %s\n" RESET, interp->code);
+    }
     printf(YELLOW "==================================================\n" RESET);
     
     int binary_start = -1;
@@ -692,6 +698,7 @@ void print_help() {
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
+        printf(RED "Error: No input file specified!\n" RESET);
         print_help();
         return 1;
     }
