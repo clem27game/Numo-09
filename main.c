@@ -142,7 +142,12 @@ void create_variable(NumoInterpreter *interp, int type, int position) {
     
     switch (type) {
         case 3: // Numeric variable (integers)
-            var->value.int_val = position % 100;
+            // Look at the next digit to get the value
+            if (interp->position + 1 < interp->code_length) {
+                var->value.int_val = interp->code[interp->position + 1] - '0';
+            } else {
+                var->value.int_val = position % 10;
+            }
             printf(YELLOW "Created numeric variable %s = %d\n" RESET, var->name, var->value.int_val);
             break;
         case 4: // Text string variable
@@ -171,7 +176,10 @@ void create_variable(NumoInterpreter *interp, int type, int position) {
 
 // Advanced mathematical operations
 void handle_advanced_math(NumoInterpreter *interp, int operation, int position) {
-    if (interp->var_count < 2) return;
+    if (interp->var_count < 1) {
+        printf(RED "Error: No variables available for math operation\n" RESET);
+        return;
+    }
     
     double val1 = 0, val2 = 0;
     int count = 0;
@@ -180,7 +188,7 @@ void handle_advanced_math(NumoInterpreter *interp, int operation, int position) 
     for (int i = interp->var_count - 1; i >= 0 && count < 2; i--) {
         if (interp->vars[i].type == 3 || interp->vars[i].type == 6) {
             double value = (interp->vars[i].type == 3) ? 
-                          interp->vars[i].value.int_val : 
+                          (double)interp->vars[i].value.int_val : 
                           interp->vars[i].value.float_val;
             if (count == 0) val1 = value;
             else val2 = value;
@@ -188,29 +196,45 @@ void handle_advanced_math(NumoInterpreter *interp, int operation, int position) 
         }
     }
     
+    // If only one value, use it for both operands for simple operations
+    if (count == 1) {
+        val2 = val1;
+    }
+    
     double result = 0;
     char op_name[20];
+    char op_symbol = '?';
     
     switch (operation) {
         case 0: // Addition
             result = val2 + val1;
             strcpy(op_name, "Addition");
+            op_symbol = '+';
             break;
         case 1: // Subtraction
             result = val2 - val1;
             strcpy(op_name, "Subtraction");
+            op_symbol = '-';
             break;
         case 2: // Multiplication
             result = val2 * val1;
             strcpy(op_name, "Multiplication");
+            op_symbol = '*';
             break;
         case 3: // Division
-            result = (val1 != 0) ? val2 / val1 : 0;
+            if (val1 != 0) {
+                result = val2 / val1;
+            } else {
+                result = 0;
+                printf(RED "Warning: Division by zero!\n" RESET);
+            }
             strcpy(op_name, "Division");
+            op_symbol = '/';
             break;
         case 4: // Power
             result = pow(val2, val1);
             strcpy(op_name, "Power");
+            op_symbol = '^';
             break;
         case 5: // Square root
             result = sqrt(val1);
@@ -225,24 +249,39 @@ void handle_advanced_math(NumoInterpreter *interp, int operation, int position) 
             strcpy(op_name, "Cosine");
             break;
         case 8: // Logarithm
-            result = (val1 > 0) ? log(val1) : 0;
+            if (val1 > 0) {
+                result = log(val1);
+            } else {
+                result = 0;
+                printf(RED "Warning: Logarithm of non-positive number!\n" RESET);
+            }
             strcpy(op_name, "Logarithm");
             break;
         case 9: // Modulo
-            result = (val1 != 0) ? fmod(val2, val1) : 0;
+            if (val1 != 0) {
+                result = fmod(val2, val1);
+            } else {
+                result = 0;
+                printf(RED "Warning: Modulo by zero!\n" RESET);
+            }
             strcpy(op_name, "Modulo");
+            op_symbol = '%';
             break;
     }
     
-    printf(GREEN "%s: %.2f %s %.2f = %.2f\n" RESET, op_name, val2, 
-           (operation <= 3) ? "+-*/"[operation] : '?', val1, result);
+    if (operation <= 4 || operation == 9) {
+        printf(GREEN "%s: %.2f %c %.2f = %.2f\n" RESET, op_name, val2, op_symbol, val1, result);
+    } else {
+        printf(GREEN "%s(%.2f) = %.2f\n" RESET, op_name, val1, result);
+    }
     
     // Store result
     if (interp->var_count < MAX_VARIABLES) {
         Variable *var = &interp->vars[interp->var_count];
         var->type = 6;
-        sprintf(var->name, "math_result_%d", position);
+        sprintf(var->name, "result_%d", position);
         var->value.float_val = result;
+        printf(CYAN "Result stored in variable %s\n" RESET, var->name);
         interp->var_count++;
     }
 }
@@ -359,8 +398,11 @@ void handle_enhanced_io(NumoInterpreter *interp, int io_type, int position) {
     switch (io_type) {
         case 0: // Input number
             printf(YELLOW "Enter a number: " RESET);
+            fflush(stdout);
             int input_val;
             if (scanf("%d", &input_val) == 1) {
+                // Clear input buffer
+                while (getchar() != '\n');
                 if (interp->var_count < MAX_VARIABLES) {
                     Variable *var = &interp->vars[interp->var_count];
                     var->type = 3;
@@ -369,12 +411,19 @@ void handle_enhanced_io(NumoInterpreter *interp, int io_type, int position) {
                     printf(GREEN "Stored input %d in variable %s\n" RESET, input_val, var->name);
                     interp->var_count++;
                 }
+            } else {
+                printf(RED "Invalid input!\n" RESET);
+                // Clear input buffer
+                while (getchar() != '\n');
             }
             break;
         case 1: // Input string
             printf(YELLOW "Enter a string: " RESET);
+            fflush(stdout);
             char input_str[MAX_STRING_LEN];
-            if (scanf("%s", input_str) == 1) {
+            if (fgets(input_str, sizeof(input_str), stdin)) {
+                // Remove newline if present
+                input_str[strcspn(input_str, "\n")] = 0;
                 if (interp->var_count < MAX_VARIABLES) {
                     Variable *var = &interp->vars[interp->var_count];
                     var->type = 4;
@@ -383,6 +432,8 @@ void handle_enhanced_io(NumoInterpreter *interp, int io_type, int position) {
                     printf(GREEN "Stored input \"%s\" in variable %s\n" RESET, input_str, var->name);
                     interp->var_count++;
                 }
+            } else {
+                printf(RED "Error reading string input!\n" RESET);
             }
             break;
         case 2: // Display variable

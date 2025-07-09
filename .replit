@@ -77,10 +77,6 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "make clean"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
 args = "make"
 
 [[workflows.workflow.tasks]]
@@ -112,3 +108,16 @@ args = "make"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "./main bonjour.num"
+
+[[workflows.workflow]]
+name = "Test Calculs"
+author = 10543762
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "make"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./main test_calculs.num -d"
