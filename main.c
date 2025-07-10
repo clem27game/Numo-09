@@ -289,6 +289,261 @@ void handle_advanced_math(NumoInterpreter *interp, int operation, int position) 
     }
 }
 
+// Handle conditionals (digit 6) - NEW
+void handle_conditionals(NumoInterpreter *interp, int position) {
+    int prev_digit = (position > 0) ? interp->code[position - 1] - '0' : 0;
+    
+    printf(BLUE "Conditional operation (previous digit: %d) at position %d\n" RESET, prev_digit, position);
+    
+    switch (prev_digit) {
+        case 1: // IF condition
+            if (interp->var_count > 0) {
+                Variable *var = &interp->vars[interp->var_count - 1];
+                bool condition = false;
+                
+                switch (var->type) {
+                    case 3: condition = (var->value.int_val != 0); break;
+                    case 5: condition = var->value.bool_val; break;
+                    case 6: condition = (var->value.float_val != 0.0); break;
+                    default: condition = false; break;
+                }
+                
+                if (interp->stack_pointer < MAX_STACK_SIZE) {
+                    interp->stack[interp->stack_pointer].position = position;
+                    interp->stack[interp->stack_pointer].condition_result = condition ? 1 : 0;
+                    interp->stack_pointer++;
+                }
+                
+                printf(YELLOW "IF condition evaluated to: %s\n" RESET, condition ? "TRUE" : "FALSE");
+            }
+            break;
+            
+        case 2: // ELSE
+            if (interp->stack_pointer > 0) {
+                int condition = interp->stack[interp->stack_pointer - 1].condition_result;
+                printf(MAGENTA "ELSE branch (condition was %s)\n" RESET, condition ? "TRUE" : "FALSE");
+            }
+            break;
+            
+        case 3: // WHILE loop
+            if (interp->var_count > 0) {
+                Variable *var = &interp->vars[interp->var_count - 1];
+                bool condition = (var->type == 3) ? (var->value.int_val > 0) : true;
+                
+                if (condition && interp->loop_depth < 10) {
+                    interp->loop_depth++;
+                    printf(GREEN "WHILE loop started (depth: %d)\n" RESET, interp->loop_depth);
+                } else {
+                    printf(RED "WHILE loop condition false or max depth reached\n" RESET);
+                }
+            }
+            break;
+            
+        case 4: // FOR loop
+            if (interp->var_count > 0) {
+                Variable *var = &interp->vars[interp->var_count - 1];
+                int iterations = (var->type == 3) ? var->value.int_val : 3;
+                
+                printf(CYAN "FOR loop with %d iterations\n" RESET, iterations);
+                
+                for (int i = 0; i < iterations && i < 10; i++) {
+                    printf(YELLOW "FOR iteration %d/%d\n" RESET, i + 1, iterations);
+                }
+            }
+            break;
+            
+        case 5: // SWITCH-CASE
+            if (interp->var_count > 0) {
+                Variable *var = &interp->vars[interp->var_count - 1];
+                int case_value = (var->type == 3) ? var->value.int_val : 0;
+                
+                printf(BLUE "SWITCH-CASE with value: %d\n" RESET, case_value);
+                
+                switch (case_value % 5) {
+                    case 0: printf(GREEN "CASE 0: Default case\n" RESET); break;
+                    case 1: printf(YELLOW "CASE 1: First case\n" RESET); break;
+                    case 2: printf(MAGENTA "CASE 2: Second case\n" RESET); break;
+                    case 3: printf(CYAN "CASE 3: Third case\n" RESET); break;
+                    case 4: printf(RED "CASE 4: Fourth case\n" RESET); break;
+                }
+            }
+            break;
+            
+        default:
+            printf(GREEN "Basic conditional operation\n" RESET);
+            break;
+    }
+}
+
+// Handle loops and iterations (digit 2) - NEW
+void handle_loops(NumoInterpreter *interp, int position) {
+    int prev_digit = (position > 0) ? interp->code[position - 1] - '0' : 0;
+    
+    printf(CYAN "Loop/Iteration operation (previous digit: %d) at position %d\n" RESET, prev_digit, position);
+    
+    switch (prev_digit) {
+        case 1: // Simple FOR loop
+            printf(YELLOW "Simple FOR loop (3 iterations)\n" RESET);
+            for (int i = 0; i < 3; i++) {
+                printf(GREEN "  Iteration %d\n" RESET, i + 1);
+            }
+            break;
+            
+        case 3: // WHILE loop based on variable
+            if (interp->var_count > 0) {
+                Variable *var = &interp->vars[interp->var_count - 1];
+                int count = (var->type == 3) ? var->value.int_val : 2;
+                
+                printf(MAGENTA "WHILE loop with %d iterations\n" RESET, count);
+                int i = 0;
+                while (i < count && i < 5) {
+                    printf(BLUE "  WHILE iteration %d\n" RESET, i + 1);
+                    i++;
+                }
+            }
+            break;
+            
+        case 4: // DO-WHILE loop
+            printf(CYAN "DO-WHILE loop\n" RESET);
+            int j = 0;
+            do {
+                printf(YELLOW "  DO-WHILE iteration %d\n" RESET, j + 1);
+                j++;
+            } while (j < 2);
+            break;
+            
+        case 5: // REPEAT loop
+            if (interp->var_count > 0) {
+                Variable *var = &interp->vars[interp->var_count - 1];
+                int repeats = (var->type == 3) ? var->value.int_val : 3;
+                
+                printf(GREEN "REPEAT loop %d times\n" RESET, repeats);
+                for (int k = 0; k < repeats && k < 4; k++) {
+                    printf(MAGENTA "  REPEAT %d\n" RESET, k + 1);
+                }
+            }
+            break;
+            
+        default:
+            printf(RED "End of binary program marker\n" RESET);
+            break;
+    }
+}
+
+// Enhanced variable creation (digit 3) - IMPROVED
+void handle_variable_creation(NumoInterpreter *interp, int position) {
+    int prev_digit = (position > 0) ? interp->code[position - 1] - '0' : 0;
+    int next_digit = (position + 1 < interp->code_length) ? interp->code[position + 1] - '0' : 0;
+    
+    if (interp->var_count >= MAX_VARIABLES) return;
+    
+    Variable *var = &interp->vars[interp->var_count];
+    
+    if (prev_digit == 6 || next_digit == 6) {
+        // Float variable
+        var->type = 6;
+        sprintf(var->name, "float_var_%d", position);
+        var->value.float_val = (double)(position % 100) / 10.0;
+        printf(GREEN "Created FLOAT variable %s = %.2f\n" RESET, var->name, var->value.float_val);
+    } else {
+        // Integer variable
+        var->type = 3;
+        sprintf(var->name, "int_var_%d", position);
+        var->value.int_val = next_digit;
+        printf(YELLOW "Created INTEGER variable %s = %d\n" RESET, var->name, var->value.int_val);
+    }
+    
+    interp->var_count++;
+}
+
+// Enhanced string handling (digit 4) - IMPROVED
+void handle_string_operations(NumoInterpreter *interp, int position) {
+    int prev_digit = (position > 0) ? interp->code[position - 1] - '0' : 0;
+    int next_digit = (position + 1 < interp->code_length) ? interp->code[position + 1] - '0' : 0;
+    
+    if (next_digit == 7 || prev_digit == 7) {
+        // Display/output mode
+        if (interp->var_count > 0) {
+            Variable *var = &interp->vars[interp->var_count - 1];
+            printf(BOLD CYAN "=== STRING OUTPUT ===" RESET "\n");
+            
+            switch (var->type) {
+                case 3:
+                    printf(GREEN "Number: %d\n" RESET, var->value.int_val);
+                    break;
+                case 4:
+                    printf(MAGENTA "Text: \"%s\"\n" RESET, var->value.str_val);
+                    break;
+                case 5:
+                    printf(BLUE "Boolean: %s\n" RESET, var->value.bool_val ? "TRUE" : "FALSE");
+                    break;
+                case 6:
+                    printf(YELLOW "Float: %.2f\n" RESET, var->value.float_val);
+                    break;
+                default:
+                    printf(WHITE "Unknown variable type\n" RESET);
+                    break;
+            }
+            printf(BOLD CYAN "===================" RESET "\n");
+        } else {
+            printf(RED "No variables to display!\n" RESET);
+        }
+    } else {
+        // Create string variable
+        if (interp->var_count < MAX_VARIABLES) {
+            Variable *var = &interp->vars[interp->var_count];
+            var->type = 4;
+            sprintf(var->name, "string_var_%d", position);
+            sprintf(var->value.str_val, "Hello_%d", position);
+            printf(MAGENTA "Created STRING variable %s = \"%s\"\n" RESET, var->name, var->value.str_val);
+            interp->var_count++;
+        }
+    }
+}
+
+// Enhanced boolean and execution control (digit 5) - IMPROVED
+void handle_boolean_and_control(NumoInterpreter *interp, int position) {
+    int prev_digit = (position > 0) ? interp->code[position - 1] - '0' : 0;
+    int next_digit = (position + 1 < interp->code_length) ? interp->code[position + 1] - '0' : 0;
+    
+    if (prev_digit == 6 || next_digit == 6) {
+        // Execution control mode
+        if (interp->var_count > 0) {
+            Variable *var = &interp->vars[interp->var_count - 1];
+            bool condition = false;
+            
+            switch (var->type) {
+                case 3: condition = (var->value.int_val > 0); break;
+                case 5: condition = var->value.bool_val; break;
+                case 6: condition = (var->value.float_val > 0.0); break;
+                default: condition = true; break;
+            }
+            
+            if (condition) {
+                printf(GREEN "EXECUTION CONTROL: Condition TRUE - Continue program\n" RESET);
+                // Continue normal execution
+            } else {
+                printf(RED "EXECUTION CONTROL: Condition FALSE - Skip next operation\n" RESET);
+                // Skip next position
+                if (interp->position + 1 < interp->code_length) {
+                    interp->position++;
+                }
+            }
+        }
+    } else {
+        // Create boolean variable
+        if (interp->var_count < MAX_VARIABLES) {
+            Variable *var = &interp->vars[interp->var_count];
+            var->type = 5;
+            sprintf(var->name, "bool_var_%d", position);
+            var->value.bool_val = (position % 2 == 0);
+            printf(BLUE "Created BOOLEAN variable %s = %s\n" RESET, var->name, 
+                   var->value.bool_val ? "TRUE" : "FALSE");
+            interp->var_count++;
+        }
+    }
+}
+
 // Enhanced input/output operations
 void handle_enhanced_io(NumoInterpreter *interp, int io_type, int position) {
     printf(BLUE "Enhanced I/O operation type %d at position %d\n" RESET, io_type, position);
@@ -477,27 +732,29 @@ void interpret(NumoInterpreter *interp) {
                 }
                 break;
 
-            case '2': // End of binary program
+            case '2': // End of binary program OR loops/iterations
                 if (binary_start != -1) {
                     execute_binary(interp, binary_start, interp->position);
                     binary_start = -1;
+                } else {
+                    handle_loops(interp, interp->position);
                 }
                 break;
 
-            case '3': // Create numeric variable (integers)
-                create_variable(interp, 3, interp->position);
+            case '3': // Enhanced variable creation (integers/floats)
+                handle_variable_creation(interp, interp->position);
                 break;
 
-            case '4': // Create text string variable or math operation
-                create_variable(interp, 4, interp->position);
+            case '4': // Enhanced string operations (create/display)
+                handle_string_operations(interp, interp->position);
                 break;
 
-            case '5': // Create boolean variable
-                create_variable(interp, 5, interp->position);
+            case '5': // Enhanced boolean and execution control
+                handle_boolean_and_control(interp, interp->position);
                 break;
 
-            case '6': // Create float variable
-                create_variable(interp, 6, interp->position);
+            case '6': // Conditionals (if, else, while, for, switch)
+                handle_conditionals(interp, interp->position);
                 break;
 
             case '7': // Enhanced Input/Output operations

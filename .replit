@@ -121,3 +121,16 @@ args = "make"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "./main addition.num -d"
+
+[[workflows.workflow]]
+name = "Test Fonctionnalités Avancées"
+author = 10543762
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "make"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./main test_avance.num -d"
