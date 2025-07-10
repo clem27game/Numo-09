@@ -14,8 +14,8 @@ var_3_11 (int) = 4
 var_4_12 (string) = "text_12"
 var_5_13 (bool) = false
 var_6_14 (float) = 1.40
-random_15 (int) = 16
-result_16 (float) = -0.96
+random_15 (int) = 39
+result_16 (float) = 0.27
 
 --- Execution Statistics ---
 Total code length: 54

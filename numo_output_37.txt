@@ -14,12 +14,12 @@ var_3_11 (int) = 4
 var_4_12 (string) = "text_12"
 var_5_13 (bool) = false
 var_6_14 (float) = 1.40
-random_15 (int) = 16
-result_16 (float) = -0.96
+random_15 (int) = 39
+result_16 (float) = 0.27
 var_3_18 (int) = 4
 var_4_19 (string) = "text_19"
-result_20 (float) = 0.84
-input_str_21 (string) = "5"
+result_20 (float) = 0.01
+input_str_21 (string) = "7"
 var_6_22 (float) = 2.20
 var_5_23 (bool) = false
 var_4_24 (string) = "text_24"
@@ -28,8 +28,8 @@ var_3_31 (int) = 4
 var_4_32 (string) = "text_32"
 var_5_33 (bool) = false
 var_6_34 (float) = 3.40
-random_35 (int) = 1
-result_36 (float) = 0.54
+random_35 (int) = 51
+result_36 (float) = 0.74
 
 --- Execution Statistics ---
 Total code length: 54
