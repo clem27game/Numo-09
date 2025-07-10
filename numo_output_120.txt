@@ -5,11 +5,11 @@ Stack pointer: 0
 Loop depth: 0
 
 --- Variables ---
-var_3_113 (int) = 0
-var_3_115 (int) = 4
-var_4_116 (string) = "text_116"
+int_var_113 (int) = 0
+int_var_115 (int) = 4
+string_var_116 (string) = "Hello_116"
 result_117 (float) = 0.00
-var_5_118 (bool) = true
+bool_var_118 (bool) = true
 
 --- Execution Statistics ---
 Total code length: 121
